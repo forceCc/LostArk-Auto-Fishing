@@ -1,0 +1,31 @@
+fishing:
+  key: "e" # 钓鱼按键
+  image: # 普通钓鱼相关图片
+    template: "resources/1080/template.png" # 感叹号
+  region:
+    - 940
+    - 450
+    - 40
+    - 100
+miniGame:
+  key: "w" # 小游戏按键
+  image: # 小游戏相关图片
+    perfect_zone: "resources/1080/perfectZone.png" # 完美区域
+    moving_arrow: "resources/1080/movingArrow.png" # 小游戏浮标
+    esc_btn: "resources/1080/esc.png" # 小游戏“退出按钮”
+  region:
+    available:
+      - 731
+      - 980
+      - 42
+      - 43
+    game_bar:
+      - 490
+      - 110
+      - 35
+      - 456
+    esc_btn:
+      - 0
+      - 0
+      - 112
+      - 72
