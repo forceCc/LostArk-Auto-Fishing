@@ -34,22 +34,33 @@ def init(config):
     print("🔧 初始化完成！")
 
 
+def castFish(counter):
+    print(f"🎣 抛竿中... 第 {counter} 次")
+    pyautogui.press(config["fishing"]["key"], interval=random.uniform(5.5, 6.5))
+
+
 def castNet():
     pyautogui.press(config["miniGame"]["key"], interval=random.uniform(6.5, 7.0))
     perfect_zone_loc = pyautogui.locateOnScreen(
-        image=perfect_zone, region=game_bar_region, confidence=0.9
+        image=perfect_zone,
+        region=game_bar_region,
+        confidence=0.9,
     )
-    y = perfect_zone_loc.top - 30
+    y = perfect_zone_loc.top - 25
     while True:
         arrow_loc = pyautogui.locateOnScreen(
             image=moving_arrow,
             grayscale=True,
+            region=game_bar_region,
             confidence=0.7,
         )
         if arrow_loc is not None and arrow_loc.top > y:
             pyautogui.press("space", 3, interval=random.uniform(0.1, 0.2))
         esc_loc = pyautogui.locateOnScreen(
-            image=esc_btn, region=esc_btn_region, confidence=0.9, grayscale=True
+            image=esc_btn,
+            grayscale=True,
+            region=esc_btn_region,
+            confidence=0.9,
         )
         if esc_loc is None:
             sleep(random.uniform(5.5, 6.5))
@@ -66,8 +77,7 @@ def startFishing():
         if flag == 0:
             flag = 1
             counter += 1
-            print(f"🎣 抛竿中... 第 {counter} 次")
-            pyautogui.press(config["fishing"]["key"], interval=random.uniform(5.5, 6.5))
+            castFish(counter)
 
         screenshot = pyautogui.screenshot(region=fishing_region)
         image = cv2.cvtColor(np.array(screenshot), cv2.COLOR_BGR2GRAY)
@@ -89,8 +99,10 @@ def startFishing():
 
         if idletimer >= 500:
             print("⌛ 空闲时间过长，重新抛竿！\n")
+            flag = 1
             idletimer = 0
-            flag = 0
+            counter += 1
+            castFish(counter)
 
 
 def main():

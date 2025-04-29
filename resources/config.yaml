@@ -22,7 +22,7 @@ miniGame:
     game_bar:
       - 490
       - 110
-      - 35
+      - 70
       - 456
     esc_btn:
       - 0
