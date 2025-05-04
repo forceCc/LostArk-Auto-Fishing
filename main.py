@@ -8,7 +8,7 @@ from PIL import Image
 
 
 def loadConfig():
-    with open("resources/config.yaml", mode="r", encoding="utf-8") as yamlfile:
+    with open(r"resources/config.yaml", "r", encoding="utf-8") as yamlfile:
         config = yaml.safe_load(yamlfile)
     return config
 
