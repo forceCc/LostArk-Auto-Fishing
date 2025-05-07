@@ -5,6 +5,7 @@ from time import sleep
 import random
 import yaml
 from PIL import Image
+from random import randint
 
 
 def loadConfig():
@@ -46,7 +47,9 @@ def castNet():
         region=game_bar_region,
         confidence=0.9,
     )
-    y = perfect_zone_loc.top - 25
+    if perfect_zone_loc is None:
+        return
+    y = perfect_zone_loc.top - 10
     while True:
         arrow_loc = pyautogui.locateOnScreen(
             image=moving_arrow,
@@ -55,7 +58,7 @@ def castNet():
             confidence=0.7,
         )
         if arrow_loc is not None and arrow_loc.top > y:
-            pyautogui.press("space", 3, interval=random.uniform(0.1, 0.2))
+            pyautogui.press("space", 3, interval=random.uniform(0.16, 0.17))
         esc_loc = pyautogui.locateOnScreen(
             image=esc_btn,
             grayscale=True,
@@ -65,6 +68,33 @@ def castNet():
         if esc_loc is None:
             sleep(random.uniform(5.5, 6.5))
             break
+
+
+def repair():
+    print("🔧 修理渔具中...\n")
+    pyautogui.hotkey("alt", "p")
+    sleep(random.uniform(1.0, 1.5))
+    pyautogui.moveTo(randint(1225, 1235), randint(715, 725))
+    sleep(random.uniform(0.1, 0.2))
+    pyautogui.leftClick()
+    # pyautogui.click(randint(1225, 1235), randint(715, 725))
+    sleep(random.uniform(1.0, 1.5))
+    pyautogui.moveTo(randint(650, 800), randint(350, 370))
+    sleep(random.uniform(0.1, 0.2))
+    pyautogui.leftClick()
+    # pyautogui.click(randint(650, 800), randint(350, 370))
+    sleep(random.uniform(1.0, 1.5))
+    pyautogui.moveTo(randint(1120, 1140), randint(800, 820))
+    sleep(random.uniform(0.1, 0.2))
+    pyautogui.leftClick()
+    # pyautogui.click(randint(1120, 1140), randint(800, 820))
+    sleep(random.uniform(1.0, 1.5))
+    # pyautogui.click(randint(900, 940), randint(590, 610))
+    pyautogui.press("enter")
+    sleep(random.uniform(0.5, 1.0))
+    pyautogui.press("esc", presses=2, interval=random.uniform(1.0, 2.0))
+    sleep(random.uniform(1.0, 1.5))
+    pyautogui.moveTo(randint(670, 1300), randint(850, 900))
 
 
 def startFishing():
@@ -94,10 +124,14 @@ def startFishing():
 
             screenshot = pyautogui.screenshot(region=available_region)
             image = cv2.cvtColor(np.array(screenshot), cv2.COLOR_BGR2GRAY)
+
             if np.mean(image) > 100:
                 castNet()
 
-        if idletimer >= 500:
+            if counter % 100 == 0:
+                repair()
+
+        if idletimer >= 400:
             print("⌛ 空闲时间过长，重新抛竿！\n")
             flag = 1
             idletimer = 0
