@@ -1,14 +1,16 @@
 import numpy as np
 import pyautogui
 import cv2
-from time import sleep
 import random
 import yaml
 from PIL import Image
+from random import randint
+import time
+from ultralytics import YOLO
 
 
 def loadConfig():
-    with open(r"resources/config.yaml", "r", encoding="utf-8") as yamlfile:
+    with open("resources/config.yaml", mode="r", encoding="utf-8") as yamlfile:
         config = yaml.safe_load(yamlfile)
     return config
 
@@ -22,7 +24,8 @@ def init(config):
         fishing_region, \
         available_region, \
         game_bar_region, \
-        esc_btn_region
+        esc_btn_region, \
+        model
     template = cv2.imread(config["fishing"]["image"]["template"], 0)
     perfect_zone = Image.open(config["miniGame"]["image"]["perfect_zone"])
     moving_arrow = Image.open(config["miniGame"]["image"]["moving_arrow"])
@@ -31,12 +34,13 @@ def init(config):
     available_region = config["miniGame"]["region"]["available"]
     game_bar_region = config["miniGame"]["region"]["game_bar"]
     esc_btn_region = config["miniGame"]["region"]["esc_btn"]
+    model = YOLO("runs/detect/train/weights/best.pt")
     print("🔧 初始化完成！")
 
 
 def castFish(counter):
     print(f"🎣 抛竿中... 第 {counter} 次")
-    pyautogui.press(config["fishing"]["key"], interval=random.uniform(5.5, 6.5))
+    pyautogui.press(config["fishing"]["key"], interval=random.uniform(5.5, 6.0))
 
 
 def castNet():
@@ -46,7 +50,12 @@ def castNet():
         region=game_bar_region,
         confidence=0.9,
     )
-    y = perfect_zone_loc.top - 25
+    if perfect_zone_loc is None:
+        print("Couldn't found perfect zone!")
+        pyautogui.press("esc", interval=random.uniform(2.0, 2.5))
+        castNet()
+        return
+    y = perfect_zone_loc.top - 10
     while True:
         arrow_loc = pyautogui.locateOnScreen(
             image=moving_arrow,
@@ -55,7 +64,7 @@ def castNet():
             confidence=0.7,
         )
         if arrow_loc is not None and arrow_loc.top > y:
-            pyautogui.press("space", 3, interval=random.uniform(0.1, 0.2))
+            pyautogui.press("space", 3, interval=random.uniform(0.16, 0.17))
         esc_loc = pyautogui.locateOnScreen(
             image=esc_btn,
             grayscale=True,
@@ -63,14 +72,32 @@ def castNet():
             confidence=0.9,
         )
         if esc_loc is None:
-            sleep(random.uniform(5.5, 6.5))
+            time.sleep(random.uniform(5.5, 6.0))
             break
+
+
+def repair():
+    print("🔧 修理渔具中...\n")
+    pyautogui.hotkey("alt", "p", interval=random.uniform(1.0, 1.5))
+    pyautogui.moveTo(randint(1225, 1235), randint(715, 725))
+    time.sleep(random.uniform(0.1, 0.2))
+    pyautogui.leftClick(interval=random.uniform(1.0, 1.5))
+    pyautogui.moveTo(randint(650, 800), randint(350, 370))
+    time.sleep(random.uniform(0.1, 0.2))
+    pyautogui.leftClick(interval=random.uniform(1.0, 1.5))
+    pyautogui.moveTo(randint(1120, 1140), randint(800, 820))
+    time.sleep(random.uniform(0.1, 0.2))
+    pyautogui.leftClick(interval=random.uniform(0.2, 0.3))
+    pyautogui.press("enter", interval=random.uniform(0.2, 0.3))
+    pyautogui.press("esc", presses=2, interval=random.uniform(0.5, 1.0))
+    pyautogui.moveTo(randint(620, 1300), randint(700, 900))
 
 
 def startFishing():
     flag = 0
     counter = 0
     idletimer = 0
+    conf = 0.0
     while True:
         idletimer += 1
 
@@ -79,25 +106,38 @@ def startFishing():
             counter += 1
             castFish(counter)
 
+        # screenshot = pyautogui.screenshot(f"screenshot/sc_{i}.png", fishing_region)
+        # i += 1
         screenshot = pyautogui.screenshot(region=fishing_region)
-        image = cv2.cvtColor(np.array(screenshot), cv2.COLOR_BGR2GRAY)
 
-        template_match = cv2.matchTemplate(image, template, cv2.TM_CCOEFF_NORMED)
-        template_loc = np.where(template_match >= 0.7)
+        results = model.predict(
+            source=screenshot,
+            save=False,
+            imgsz=640,
+            conf=0.7,
+            verbose=False,
+        )
+        boxes = results[0].boxes
+        for i in range(len(boxes)):
+            conf = round(float(boxes.conf[i]), 2)
 
-        if len(template_loc[0]) > 0 and flag == 1:
+        if conf >= 0.7 and flag == 1:
             print("🐟 鱼上钩了！\n")
             flag = 0
             idletimer = 0
-            sleep(random.uniform(0.1, 0.2))
-            pyautogui.press(config["fishing"]["key"], interval=random.uniform(6.5, 7.5))
+            time.sleep(random.uniform(0.1, 0.2))
+            pyautogui.press(config["fishing"]["key"], interval=random.uniform(6.5, 7.0))
 
             screenshot = pyautogui.screenshot(region=available_region)
             image = cv2.cvtColor(np.array(screenshot), cv2.COLOR_BGR2GRAY)
+
             if np.mean(image) > 100:
                 castNet()
 
-        if idletimer >= 500:
+            if counter % 50 == 0:
+                repair()
+
+        if idletimer >= 300:
             print("⌛ 空闲时间过长，重新抛竿！\n")
             flag = 1
             idletimer = 0
@@ -105,15 +145,14 @@ def startFishing():
             castFish(counter)
 
 
-def main():
+def main(sec_timer=0.0):
     global config
     config = loadConfig()
     init(config)
-    sec_timer = 3
     print(f"🟢 {sec_timer} 秒后启动钓鱼机器人\n")
-    sleep(sec_timer)
+    time.sleep(sec_timer)
     startFishing()
 
 
 if __name__ == "__main__":
-    main()
+    main(3)

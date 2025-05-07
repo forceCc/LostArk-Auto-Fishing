@@ -1,0 +1,7 @@
+numpy==2.2.5
+opencv-python==4.11.0.86
+torch==2.7.0+cu128
+torchaudio==2.7.0+cu128
+torchvision==0.22.0+cu128
+ultralytics==8.3.137
+pyautogui==0.9.54
