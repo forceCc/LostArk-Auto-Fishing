@@ -12,8 +12,8 @@ pip install -r requirements.txt
 
 ## Location
 
-![alt text](image.png)
-![alt text](image-1.png)
+![alt text](resources/image1.png)
+![alt text](resources/image2.png)
 
 ## AutoFishing
 

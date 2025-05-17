@@ -10,7 +10,7 @@ from ultralytics import YOLO
 
 
 def loadConfig():
-    with open("resources/config.yaml", mode="r", encoding="utf-8") as yamlfile:
+    with open("config.yaml", mode="r", encoding="utf-8") as yamlfile:
         config = yaml.safe_load(yamlfile)
     return config
 
@@ -26,7 +26,7 @@ def init(config):
         game_bar_region, \
         esc_btn_region, \
         model
-    template = cv2.imread(config["fishing"]["image"]["template"], 0)
+    template = Image.open(config["fishing"]["image"])
     perfect_zone = Image.open(config["miniGame"]["image"]["perfect_zone"])
     moving_arrow = Image.open(config["miniGame"]["image"]["moving_arrow"])
     esc_btn = Image.open(config["miniGame"]["image"]["esc_btn"])
@@ -34,7 +34,7 @@ def init(config):
     available_region = config["miniGame"]["region"]["available"]
     game_bar_region = config["miniGame"]["region"]["game_bar"]
     esc_btn_region = config["miniGame"]["region"]["esc_btn"]
-    model = YOLO("runs/detect/train/weights/best.pt")
+    model = YOLO(config["model"])
     print("🔧 初始化完成！")
 
 
@@ -44,17 +44,19 @@ def castFish(counter):
 
 
 def castNet():
+    perfect_zone_loc = None
     pyautogui.press(config["miniGame"]["key"], interval=random.uniform(6.5, 7.0))
-    perfect_zone_loc = pyautogui.locateOnScreen(
-        image=perfect_zone,
-        region=game_bar_region,
-        confidence=0.9,
-    )
-    if perfect_zone_loc is None:
-        print("Couldn't found perfect zone!")
-        pyautogui.press("esc", interval=random.uniform(2.0, 2.5))
-        castNet()
-        return
+    while perfect_zone_loc is None:
+        perfect_zone_loc = pyautogui.locateOnScreen(
+            image=perfect_zone,
+            region=game_bar_region,
+            confidence=0.9,
+        )
+    # if perfect_zone_loc is None:
+    #     print("Couldn't found perfect zone!")
+    #     pyautogui.press("esc", interval=random.uniform(2.0, 2.5))
+    #     castNet()
+    #     return
     y = perfect_zone_loc.top - 10
     while True:
         arrow_loc = pyautogui.locateOnScreen(
@@ -97,7 +99,13 @@ def startFishing():
     flag = 0
     counter = 0
     idletimer = 0
-    conf = 0.0
+    model.predict(
+        source=template,
+        save=False,
+        imgsz=640,
+        conf=0.7,
+        verbose=False,
+    )
     while True:
         idletimer += 1
 
@@ -106,8 +114,6 @@ def startFishing():
             counter += 1
             castFish(counter)
 
-        # screenshot = pyautogui.screenshot(f"screenshot/sc_{i}.png", fishing_region)
-        # i += 1
         screenshot = pyautogui.screenshot(region=fishing_region)
 
         results = model.predict(
@@ -116,12 +122,11 @@ def startFishing():
             imgsz=640,
             conf=0.7,
             verbose=False,
+            save_conf=True,
         )
         boxes = results[0].boxes
-        for i in range(len(boxes)):
-            conf = round(float(boxes.conf[i]), 2)
 
-        if conf >= 0.7 and flag == 1:
+        if len(boxes) > 0 and flag == 1:
             print("🐟 鱼上钩了！\n")
             flag = 0
             idletimer = 0

@@ -1,0 +1,31 @@
+fishing:
+  key: "e"
+  image: "resources/1080/template.png"
+  region:
+    - 940
+    - 450
+    - 40
+    - 100
+miniGame:
+  key: "w"
+  image:
+    perfect_zone: "resources/1080/perfectZone.png"
+    moving_arrow: "resources/1080/movingArrow.png"
+    esc_btn: "resources/1080/esc.png"
+  region:
+    available:
+      - 731
+      - 980
+      - 42
+      - 43
+    game_bar:
+      - 490
+      - 110
+      - 70
+      - 456
+    esc_btn:
+      - 0
+      - 0
+      - 112
+      - 72
+model: "best.pt"
