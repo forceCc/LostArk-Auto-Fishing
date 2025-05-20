@@ -122,7 +122,6 @@ def startFishing():
             imgsz=640,
             conf=0.7,
             verbose=False,
-            save_conf=True,
         )
         boxes = results[0].boxes
 
