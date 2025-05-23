@@ -180,3 +180,4 @@ datasets/
 test.py
 train.py
 predict.py
+data.yaml
